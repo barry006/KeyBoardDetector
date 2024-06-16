@@ -1,0 +1,70 @@
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
+using UnityEngine;
+
+//https://learn.microsoft.com/fr-fr/windows-hardware/manufacture/desktop/default-input-locales-for-windows-language-packs?view=windows-11
+public class KeyboardLayoutDetector : MonoBehaviour
+{
+    private const int KL_NAMELENGTH = 9;
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetKeyboardLayout(uint idThread);
+
+    [DllImport("user32.dll")]
+    private static extern int GetKeyboardLayoutName([Out] StringBuilder pwszKLID);
+
+    private Dictionary<string, string> keyboardLayouts = new Dictionary<string, string>
+    {
+        { "00000409", "QWERTY" }, // English - United States
+        { "00000809", "QWERTY" }, // English - United Kingdom
+        { "0000040C", "AZERTY" }, // French - France
+        { "0000080C", "AZERTY" }, // Belgian (Period) - Belgium
+        { "00000407", "QWERTZ" }, // German - Germany
+        { "00000408", "Greek" }, // Greek
+        { "0000040E", "Hungarian" }, // Hungarian
+        { "0000040A", "Spanish" }, // Spanish - Spain
+        { "0000040D", "Hebrew" }, // Hebrew
+        { "00000419", "JCUKEN" }, // Russian - Russia
+        { "00000411", "Hiragana/Katakana" }, // Japanese - Japan
+        { "00000412", "Hangul" }, // Korean - Korea
+        { "00000404", "Bopomofo" }, // Chinese (Traditional) - Taiwan     
+    };
+
+    void Start()
+    {
+        DetectKeyboardLayout();
+    }
+
+    void DetectKeyboardLayout()
+    {
+        // Obtenir l'identifiant de la disposition du clavier
+        StringBuilder name = new StringBuilder(KL_NAMELENGTH);
+        GetKeyboardLayoutName(name);
+        string layoutId = name.ToString();
+        Debug.Log("Layout ID: " + layoutId);
+
+        // Déterminer la disposition du clavier en fonction de l'ID
+        if (keyboardLayouts.TryGetValue(layoutId, out string layoutName))
+        {
+            Debug.Log("Clavier détecté : " + layoutName);
+        }
+        else
+        {
+            Debug.Log("Disposition du clavier non reconnue");
+        }
+    }
+
+
+    void OnGUI()
+    {
+        StringBuilder name = new StringBuilder(KL_NAMELENGTH);
+        GetKeyboardLayoutName(name);
+        string layoutId = name.ToString();
+
+        string layout = keyboardLayouts.ContainsKey(layoutId) ? keyboardLayouts[layoutId] : "Inconnue";
+        GUI.Label(new Rect(10, 10, 200, 20), "Clavier : " + layout);
+        GUI.Label(new Rect(10, 30, 200, 20), "Clavier ID : " + layoutId);
+    }
+}
