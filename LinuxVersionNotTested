@@ -1,0 +1,119 @@
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using System.Text;
+using UnityEngine;
+
+public class KeyboardLayoutDetector : MonoBehaviour
+{
+    private const int KL_NAMELENGTH = 9;
+
+    [DllImport("X11")]
+    private static extern IntPtr XOpenDisplay(IntPtr display);
+
+    [DllImport("X11")]
+    private static extern IntPtr XkbAllocKeyboard();
+
+    [DllImport("X11")]
+    private static extern int XkbGetNames(IntPtr display, uint which, IntPtr xkb);
+
+    [DllImport("X11")]
+    private static extern void XkbFreeKeyboard(IntPtr xkb, uint which, bool freeAll);
+
+    private Dictionary<string, string> keyboardLayouts = new Dictionary<string, string>
+    {
+        { "us", "QWERTY" },        // English - United States
+        { "gb", "QWERTY" },        // English - United Kingdom
+        { "fr", "AZERTY" },        // French - France
+        { "be", "AZERTY" },        // Belgian (Period) - Belgium
+        { "de", "QWERTZ" },        // German - Germany
+        { "el", "Greek" },         // Greek
+        { "hu", "Hungarian" },     // Hungarian
+        { "es", "Spanish" },       // Spanish - Spain
+        { "he", "Hebrew" },        // Hebrew
+        { "ru", "JCUKEN" },        // Russian - Russia
+        { "jp", "Hiragana/Katakana" },  // Japanese - Japan
+        { "kr", "Hangul" },        // Korean - Korea
+        { "tw", "Bopomofo" },      // Chinese (Traditional) - Taiwan
+    };
+
+    void Start()
+    {
+        DetectKeyboardLayout();
+    }
+
+    void DetectKeyboardLayout()
+    {
+        IntPtr display = XOpenDisplay(IntPtr.Zero);
+        if (display == IntPtr.Zero)
+        {
+            Debug.LogError("Failed to open X display");
+            return;
+        }
+
+        IntPtr xkb = XkbAllocKeyboard();
+        if (xkb == IntPtr.Zero)
+        {
+            Debug.LogError("Failed to allocate XKB keyboard");
+            return;
+        }
+
+        int result = XkbGetNames(display, 0x0100, xkb); // 0x0100 for XkbKeyNamesMask
+        if (result != 1)
+        {
+            Debug.LogError("Failed to get XKB names");
+            XkbFreeKeyboard(xkb, 0x0100, true);
+            return;
+        }
+
+        IntPtr namesPtr = Marshal.ReadIntPtr(xkb, 12); // Assuming layout name at offset 12
+        string layoutId = Marshal.PtrToStringAnsi(namesPtr).ToLower();
+
+        XkbFreeKeyboard(xkb, 0x0100, true);
+
+        Debug.Log("Layout ID: " + layoutId);
+
+        if (keyboardLayouts.TryGetValue(layoutId, out string layoutName))
+        {
+            Debug.Log("Keyboard detected: " + layoutName);
+        }
+        else
+        {
+            Debug.Log("Keyboard layout not recognized");
+        }
+    }
+
+    void OnGUI()
+    {
+        IntPtr display = XOpenDisplay(IntPtr.Zero);
+        if (display == IntPtr.Zero)
+        {
+            Debug.LogError("Failed to open X display");
+            return;
+        }
+
+        IntPtr xkb = XkbAllocKeyboard();
+        if (xkb == IntPtr.Zero)
+        {
+            Debug.LogError("Failed to allocate XKB keyboard");
+            return;
+        }
+
+        int result = XkbGetNames(display, 0x0100, xkb); // 0x0100 for XkbKeyNamesMask
+        if (result != 1)
+        {
+            Debug.LogError("Failed to get XKB names");
+            XkbFreeKeyboard(xkb, 0x0100, true);
+            return;
+        }
+
+        IntPtr namesPtr = Marshal.ReadIntPtr(xkb, 12); // Assuming layout name at offset 12
+        string layoutId = Marshal.PtrToStringAnsi(namesPtr).ToLower();
+
+        XkbFreeKeyboard(xkb, 0x0100, true);
+
+        string layout = keyboardLayouts.ContainsKey(layoutId) ? keyboardLayouts[layoutId] : "Unknown";
+        GUI.Label(new Rect(10, 10, 200, 20), "Keyboard: " + layout);
+        GUI.Label(new Rect(10, 30, 200, 20), "Keyboard ID: " + layoutId);
+    }
+}
