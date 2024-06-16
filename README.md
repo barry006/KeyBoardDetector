@@ -4,6 +4,8 @@ It employs GetKeyboardLayout and GetKeyboardLayoutName from user32.dll to retrie
 
 The OnGUI method updates Unity's graphical user interface to visually present the current keyboard layout and its identifier.
 
+https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/default-input-locales-for-windows-language-packs?view=windows-11
+
 
 
 
