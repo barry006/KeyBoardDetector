@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using UnityEngine;
 
-//https://learn.microsoft.com/fr-fr/windows-hardware/manufacture/desktop/default-input-locales-for-windows-language-packs?view=windows-11
 public class KeyboardLayoutDetector : MonoBehaviour
 {
     private const int KL_NAMELENGTH = 9;
